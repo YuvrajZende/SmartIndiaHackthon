@@ -1,0 +1,15 @@
+{
+  "metrics": {
+    "temperature": {
+      "mae": 0.701,
+      "r2": 0.966,
+      "model_type": "LGBMRegressor"
+    },
+    "salinity": {
+      "mae": 0.262,
+      "r2": -0.114,
+      "model_type": "LGBMRegressor"
+    }
+  },
+  "trained_date": "2025-09-03T15:12:47.569607"
+}

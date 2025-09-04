@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+pydantic
+argopy
+xarray
+netCDF4
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+google-generativeai
+cartopy
+plotly
+lightgbm
+xgboost
+joblib

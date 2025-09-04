@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <section id="controls-section" class="card">
+        <h2>1. Select a Region to Analyze</h2>
+        <form id="analysis-form">
+            <select name="region_key" id="region-select">
+                <option value="" disabled selected>-- Choose an ocean region --</option>
+                {% for key, name in regions.items() %}
+                <option value="{{ key }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Run Analysis</button>
+        </form>
+        <div id="loader" class="loader" style="display: none;"></div>
+        <p id="status-message" class="status"></p>
+    </section>
+
+    <div id="results-container" style="display: none;">
+        <section id="summary-section" class="card">
+            <h2>Analysis Summary</h2>
+            <div id="summary-content"></div>
+        </section>
+
+        <section id="metrics-section" class="card">
+            <h2>ML Model Performance (R² Score)</h2>
+            <div id="metrics-content"></div>
+        </section>
+
+        <section class="card">
+            <h2>Interactive Visualizations</h2>
+            <div id="plot-geo-map" class="plot-container"></div>
+            <div id="plot-depth-profile" class="plot-container"></div>
+            <div id="plot-time-series" class="plot-container"></div>
+            <div id="plot-scatter-3d" class="plot-container"></div>
+        </section>
+
+        <section class="card">
+             <h2>2. Interactive Tools</h2>
+             <div class="tools-grid">
+                <div class="tool">
+                    <h3>🔮 Predict Ocean Conditions</h3>
+                    <form id="prediction-form">
+                        <input type="number" step="any" name="lat" placeholder="Latitude (e.g., 15.5)" required>
+                        <input type="number" step="any" name="lon" placeholder="Longitude (e.g., 73.2)" required>
+                        <input type="number" name="depth" placeholder="Depth (m, e.g., 50)" required>
+                        <input type="number" name="month" placeholder="Month (1-12)" required min="1" max="12">
+                        <button type="submit">Predict</button>
+                    </form>
+                    <pre id="prediction-result" class="result-box"></pre>
+                </div>
+                
+                <div class="tool">
+                    <h3>💬 Chat with OceanGPT</h3>
+                    <div id="chat-container">
+                        <div id="chat-box" class="result-box"></div>
+                        <form id="chat-form">
+                            <input type="text" id="chat-input" placeholder="Ask a question..." autocomplete="off">
+                            <button type="submit">Send</button>
+                        </form>
+                    </div>
+                </div>
+             </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
