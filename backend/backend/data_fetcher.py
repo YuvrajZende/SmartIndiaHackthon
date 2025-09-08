@@ -109,28 +109,45 @@ class EnhancedArgoDataFetcher:
     def _generate_sample_data(self, region_bounds, year, months):
         """Generates realistic sample data for demonstration."""
         lon_min, lon_max, lat_min, lat_max = region_bounds
-        n_profiles = np.random.randint(20, 50)
+        n_profiles = np.random.randint(30, 80)  # More profiles for better visualization
         data_points = []
-        depths = np.array([0, 10, 20, 50, 100, 200, 500, 1000, 1500, 2000])
+        depths = np.array([0, 5, 10, 20, 30, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000])
 
         for i in range(n_profiles):
-            lat = np.random.uniform(lat_min, lat_max)
-            lon = np.random.uniform(lon_min, lon_max)
+            # Create more realistic geographic distribution
+            lat = np.random.uniform(lat_min + 1, lat_max - 1)  # Avoid edges
+            lon = np.random.uniform(lon_min + 1, lon_max - 1)
             month = np.random.choice(months)
             date = datetime(year, month, np.random.randint(1, 28))
             
-            for depth in depths:
-                if depth <= 100:
-                    temp = 28 - depth * 0.05 + np.random.normal(0, 1)
+            # Generate multiple depth measurements per profile
+            n_depths = np.random.randint(8, 15)  # 8-15 depth measurements per profile
+            profile_depths = np.sort(np.random.choice(depths, n_depths, replace=False))
+            
+            for depth in profile_depths:
+                # More realistic temperature profile
+                if depth <= 50:
+                    temp = 28 - depth * 0.1 + np.random.normal(0, 0.8)
+                elif depth <= 200:
+                    temp = 23 - (depth - 50) * 0.02 + np.random.normal(0, 0.5)
                 else:
-                    temp = 23 - (depth - 100) * 0.005 + np.random.normal(0, 0.5)
-                salinity = 34.5 + np.random.normal(0, 0.3)
+                    temp = 19 - (depth - 200) * 0.003 + np.random.normal(0, 0.3)
+                
+                # More realistic salinity profile
+                if depth <= 100:
+                    salinity = 34.5 + np.random.normal(0, 0.4)
+                else:
+                    salinity = 34.8 + np.random.normal(0, 0.2)
                 
                 data_points.append({
                     'PLATFORM_NUMBER': f'SAMPLE_{i:04d}',
-                    'CYCLE_NUMBER': 1, 'TIME': date,
-                    'LATITUDE': lat, 'LONGITUDE': lon, 'PRES': depth,
-                    'TEMP': max(temp, 2), 'PSAL': max(salinity, 30)
+                    'CYCLE_NUMBER': 1, 
+                    'TIME': date,
+                    'LATITUDE': lat, 
+                    'LONGITUDE': lon, 
+                    'PRES': depth,
+                    'TEMP': max(temp, 1.5), 
+                    'PSAL': max(salinity, 32.0)
                 })
         
         df = pd.DataFrame(data_points)

@@ -9,6 +9,16 @@ from backend.analysis_manager import AnalysisManager
 from backend.config import CONFIG
 import traceback
 
+# Import API key configuration
+try:
+    from config_keys import GEMINI_API_KEY
+    os.environ['GEMINI_API_KEY'] = GEMINI_API_KEY
+    print("✅ GEMINI_API_KEY loaded from config_keys.py")
+    print(f"🔑 API Key: {GEMINI_API_KEY[:20]}...")
+except ImportError as e:
+    print(f"⚠️  config_keys.py not found: {e}")
+    print("Using environment variable if available")
+
 # --- FastAPI App Initialization ---
 app = FastAPI(
     title="Ocean LLM API",
@@ -83,6 +93,61 @@ async def get_regions():
     available_regions = {key: details["name"] for key, details in CONFIG["regions"].items()}
     return {"regions": available_regions}
 
+@app.post("/api/load_models")
+async def load_models(request: AnalysisRequest):
+    """Load and cache models for a specific region."""
+    try:
+        if request.region_key not in CONFIG["regions"]:
+            raise HTTPException(status_code=400, detail="Invalid region key")
+
+        manager = get_analysis_manager(request.region_key)
+        
+        # Check if models are already loaded
+        if manager.predictor.models_trained:
+            return {
+                "status": "already_loaded",
+                "message": f"Models for {manager.region_name} are already loaded and ready",
+                "region": manager.region_name
+            }
+        
+        # Load models by running analysis
+        success = manager.run_complete_analysis()
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to load models for the selected region")
+
+        return {
+            "status": "loaded",
+            "message": f"Models for {manager.region_name} have been successfully loaded",
+            "region": manager.region_name,
+            "summary": manager.get_summary(),
+            "model_metrics": manager.get_model_metrics()
+        }
+
+    except Exception as e:
+        print(f"Model loading error: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/model_status")
+async def get_model_status():
+    """Get the loading status of all region models."""
+    status = {}
+    for region_key, region_config in CONFIG["regions"].items():
+        if region_key in analysis_sessions:
+            manager = analysis_sessions[region_key]
+            status[region_key] = {
+                "name": region_config["name"],
+                "loaded": manager.predictor.models_trained,
+                "summary": manager.get_summary() if manager.predictor.models_trained else None
+            }
+        else:
+            status[region_key] = {
+                "name": region_config["name"],
+                "loaded": False,
+                "summary": None
+            }
+    return {"model_status": status}
+
 @app.post("/api/chat")
 async def chat_with_bot(request: ChatRequest):
     """Endpoint to interact with the AI chatbot."""
@@ -139,6 +204,43 @@ async def analyze_region(request: AnalysisRequest):
 
     except Exception as e:
         print(f"Analysis error: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/visualizations")
+async def get_visualizations(request: AnalysisRequest):
+    """
+    Endpoint to get visualizations for already loaded models.
+    This does NOT retrain models - only creates visualizations from cached data.
+    """
+    try:
+        if request.region_key not in CONFIG["regions"]:
+            raise HTTPException(status_code=400, detail="Invalid region key")
+
+        manager = get_analysis_manager(request.region_key)
+        
+        # Check if models are loaded
+        if not manager.predictor.models_trained:
+            raise HTTPException(status_code=400, detail="Models for this region are not loaded yet. Please load models first.")
+
+        # Check if we have data
+        if manager.df.empty:
+            raise HTTPException(status_code=400, detail="No data available for this region. Please load models first.")
+
+        # Create visualizations from existing data
+        response_data = {
+            "summary": manager.get_summary(),
+            "model_metrics": manager.get_model_metrics(),
+            "visualizations": {
+                "geo_map": manager.create_visualization('geographic_map'),
+                "depth_profile": manager.create_visualization('depth_profile'),
+                "time_series": manager.create_visualization('time_series'),
+                "scatter_3d": manager.create_visualization('scatter_3d')
+            }
+        }
+        return response_data
+
+    except Exception as e:
+        print(f"Visualization error: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/predict")

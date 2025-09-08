@@ -16,9 +16,14 @@ import {
   FileText,
   Bot,
   Lightbulb,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  Eye,
+  EyeOff,
+  CheckCircle
 } from "lucide-react"
-import { apiService } from "@/services/api"
+import { apiService, VisualizationResponse } from "@/services/api"
+import { SimpleVisualizationPanel } from "./SimpleVisualizationPanel"
 
 interface Message {
   id: string
@@ -32,7 +37,7 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'Hello! I\'m Ocean LLM, your AI assistant for ocean data analysis. I can help you understand oceanographic data from ARGO floats, provide insights about marine conditions, and assist with fishing recommendations. What would you like to know about the ocean?',
+      content: 'Hello! I\'m Ocean LLM, your AI assistant for ocean data analysis. I can help you understand oceanographic data from ARGO floats, provide insights about marine conditions, and assist with fishing recommendations. Please load the ocean models using the buttons above to get started!',
       sender: 'assistant',
       timestamp: new Date()
     }
@@ -43,17 +48,52 @@ export function ChatInterface() {
   const [isFocused, setIsFocused] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState('arabian_sea')
   const [isConnected, setIsConnected] = useState(false)
+  const [showVisualizations, setShowVisualizations] = useState(false)
+  const [visualizationData, setVisualizationData] = useState<VisualizationResponse | null>(null)
+  const [apiKeyStatus, setApiKeyStatus] = useState<boolean>(false)
+  const [loadedModels, setLoadedModels] = useState<Record<string, boolean>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Check backend connection on component mount
   useEffect(() => {
     checkBackendConnection()
+    checkModelStatus()
   }, [])
+
+  // Check model status periodically
+  useEffect(() => {
+    const interval = setInterval(checkModelStatus, 5000) // Check every 5 seconds
+    return () => clearInterval(interval)
+  }, [])
+
+  const checkModelStatus = async () => {
+    try {
+      const response = await apiService.getModelStatus()
+      const loadedStatus: Record<string, boolean> = {}
+      Object.entries(response.model_status).forEach(([key, status]) => {
+        loadedStatus[key] = status.loaded
+      })
+      setLoadedModels(loadedStatus)
+    } catch (error) {
+      console.error('Failed to check model status:', error)
+    }
+  }
 
   const checkBackendConnection = async () => {
     try {
-      await apiService.healthCheck()
+      const health = await apiService.healthCheck()
       setIsConnected(true)
+      setApiKeyStatus(health.api_key_set)
+      
+      if (!health.api_key_set) {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          content: '⚠️ GEMINI_API_KEY is not set. Chatbot functionality will be limited. Please set the GEMINI_API_KEY environment variable in the backend.',
+          sender: 'assistant',
+          timestamp: new Date(),
+          error: true
+        }])
+      }
     } catch (error) {
       setIsConnected(false)
       setMessages(prev => [...prev, {
@@ -68,6 +108,19 @@ export function ChatInterface() {
 
   const handleSend = async () => {
     if (!input.trim() || isSending) return
+    
+    // Check if models are loaded for the selected region
+    if (!loadedModels[selectedRegion]) {
+      const warningMessage: Message = {
+        id: Date.now().toString(),
+        content: `⚠️ Models for ${selectedRegion.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} are not loaded yet. Please use the model loader buttons above to load the models first.`,
+        sender: 'assistant',
+        timestamp: new Date(),
+        error: true
+      }
+      setMessages(prev => [...prev, warningMessage])
+      return
+    }
     
     setIsSending(true)
     const userMessage: Message = {
@@ -92,10 +145,19 @@ export function ChatInterface() {
       }
       
       setMessages(prev => [...prev, assistantMessage])
+      
+      // Auto-load visualizations if user asks about data or analysis
+      if (currentInput.toLowerCase().includes('data') || 
+          currentInput.toLowerCase().includes('analysis') || 
+          currentInput.toLowerCase().includes('visualization') ||
+          currentInput.toLowerCase().includes('graph') ||
+          currentInput.toLowerCase().includes('chart')) {
+        setShowVisualizations(true)
+      }
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please make sure the backend server is running.`,
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. ${!apiKeyStatus ? 'Make sure GEMINI_API_KEY is set in the backend.' : 'Please make sure the backend server is running.'}`,
         sender: 'assistant',
         timestamp: new Date(),
         error: true
@@ -116,9 +178,11 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+    <div className="flex h-full">
+      {/* Chat Area */}
+      <div className={`flex flex-col ${showVisualizations ? 'w-1/2' : 'w-full'} transition-all duration-300`}>
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
         {messages.map((message, index) => (
           <div
             key={message.id}
@@ -179,25 +243,46 @@ export function ChatInterface() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               <DropdownMenuItem onClick={() => setSelectedRegion('arabian_sea')} className="gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className={`w-2 h-2 rounded-full ${loadedModels['arabian_sea'] ? 'bg-green-500' : 'bg-blue-500'}`}></div>
                 Arabian Sea
+                {loadedModels['arabian_sea'] && <CheckCircle className="h-3 w-3 text-green-500 ml-auto" />}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSelectedRegion('bay_of_bengal')} className="gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className={`w-2 h-2 rounded-full ${loadedModels['bay_of_bengal'] ? 'bg-green-500' : 'bg-green-500'}`}></div>
                 Bay of Bengal
+                {loadedModels['bay_of_bengal'] && <CheckCircle className="h-3 w-3 text-green-500 ml-auto" />}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSelectedRegion('north_indian_ocean')} className="gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <div className={`w-2 h-2 rounded-full ${loadedModels['north_indian_ocean'] ? 'bg-green-500' : 'bg-purple-500'}`}></div>
                 North Indian Ocean
+                {loadedModels['north_indian_ocean'] && <CheckCircle className="h-3 w-3 text-green-500 ml-auto" />}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="text-xs text-muted-foreground">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowVisualizations(!showVisualizations)}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              {showVisualizations ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showVisualizations ? 'Hide' : 'Show'} Visualizations
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-xs text-muted-foreground">
+                {isConnected ? 'Connected' : 'Disconnected'}
+              </span>
+              {!apiKeyStatus && (
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                  <span className="text-xs text-yellow-600">No API Key</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -261,6 +346,19 @@ export function ChatInterface() {
           Ocean LLM can make mistakes. Check important info.
         </p>
       </div>
+      </div>
+
+      {/* Visualization Panel */}
+      {showVisualizations && (
+        <div className="w-1/2 border-l border-border overflow-y-auto">
+          <div className="p-6">
+            <SimpleVisualizationPanel 
+              regionKey={selectedRegion} 
+              onDataLoaded={setVisualizationData}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -128,38 +128,126 @@ class AnalysisManager:
 
         try:
             if plot_type == 'geographic_map':
+                # Ensure we have enough data points for visualization
+                if len(df_sample) < 10:
+                    df_sample = self.df.sample(n=min(100, len(self.df)), random_state=42)
+                
                 fig = px.scatter_mapbox(
-                    df_sample, lat="latitude", lon="longitude", color="temperature", size="depth",
-                    mapbox_style=CONFIG["visualization_settings"]["mapbox_style"], zoom=3,
+                    df_sample, 
+                    lat="latitude", 
+                    lon="longitude", 
+                    color="temperature", 
+                    size="depth",
+                    mapbox_style="open-street-map", 
+                    zoom=4,
                     title=f"ARGO Float Distribution - {self.region_name}",
                     color_continuous_scale=px.colors.sequential.Viridis,
-                    hover_name="profile_id", hover_data={"salinity": ":.2f", "date": "|%Y-%m-%d"}
+                    hover_name="profile_id", 
+                    hover_data={"salinity": ":.2f", "date": "|%Y-%m-%d", "depth": ":.0f"},
+                    size_max=20
                 )
-                fig.update_layout(margin={"r":0,"t":40,"l":0,"b":0})
+                fig.update_layout(
+                    margin={"r":0,"t":40,"l":0,"b":0},
+                    mapbox=dict(
+                        center=dict(
+                            lat=df_sample['latitude'].mean(),
+                            lon=df_sample['longitude'].mean()
+                        )
+                    )
+                )
 
             elif plot_type == 'depth_profile':
-                sample_profiles = df_sample['profile_id'].unique()[:10]
+                sample_profiles = df_sample['profile_id'].unique()[:8]  # Show 8 profiles
                 fig = go.Figure()
-                for pid in sample_profiles:
+                colors = px.colors.qualitative.Set1
+                
+                for i, pid in enumerate(sample_profiles):
                     profile_data = self.df[self.df['profile_id'] == pid].sort_values('depth')
                     if len(profile_data) > 3:
-                        fig.add_trace(go.Scatter(x=profile_data['temperature'], y=profile_data['depth'], mode='lines', name=pid))
-                fig.update_layout(title='Temperature Depth Profiles', xaxis_title='Temperature (°C)', yaxis_title='Depth (m)', yaxis=dict(autorange='reversed'))
+                        fig.add_trace(go.Scatter(
+                            x=profile_data['temperature'], 
+                            y=profile_data['depth'], 
+                            mode='lines+markers', 
+                            name=f'Profile {pid.split("_")[-1]}',
+                            line=dict(color=colors[i % len(colors)], width=2),
+                            marker=dict(size=4)
+                        ))
+                
+                fig.update_layout(
+                    title='Temperature Depth Profiles',
+                    xaxis_title='Temperature (°C)',
+                    yaxis_title='Depth (m)',
+                    yaxis=dict(autorange='reversed'),
+                    showlegend=True,
+                    height=500
+                )
             
             elif plot_type == 'time_series':
+                # Create time series with more data points
                 surface_data = self.df[self.df['depth'] <= 10].groupby(pd.Grouper(key='date', freq='D')).mean().reset_index()
+                
+                # If we don't have enough daily data, create monthly averages
+                if len(surface_data) < 5:
+                    surface_data = self.df[self.df['depth'] <= 10].groupby(pd.Grouper(key='date', freq='M')).mean().reset_index()
+                
                 fig = make_subplots(specs=[[{"secondary_y": True}]])
-                fig.add_trace(go.Scatter(x=surface_data['date'], y=surface_data['temperature'], name='Temperature (°C)'), secondary_y=False)
-                fig.add_trace(go.Scatter(x=surface_data['date'], y=surface_data['salinity'], name='Salinity (PSU)'), secondary_y=True)
-                fig.update_layout(title='Surface Conditions Time Series')
+                
+                # Temperature trace
+                fig.add_trace(go.Scatter(
+                    x=surface_data['date'], 
+                    y=surface_data['temperature'], 
+                    name='Temperature (°C)',
+                    mode='lines+markers',
+                    line=dict(color='red', width=2),
+                    marker=dict(size=6)
+                ), secondary_y=False)
+                
+                # Salinity trace
+                fig.add_trace(go.Scatter(
+                    x=surface_data['date'], 
+                    y=surface_data['salinity'], 
+                    name='Salinity (PSU)',
+                    mode='lines+markers',
+                    line=dict(color='blue', width=2),
+                    marker=dict(size=6)
+                ), secondary_y=True)
+                
+                fig.update_layout(
+                    title='Surface Conditions Time Series',
+                    height=500,
+                    showlegend=True
+                )
+                fig.update_xaxes(title_text="Date")
+                fig.update_yaxes(title_text="Temperature (°C)", secondary_y=False)
+                fig.update_yaxes(title_text="Salinity (PSU)", secondary_y=True)
 
             elif plot_type == 'scatter_3d':
+                # Ensure we have enough data for 3D visualization
+                if len(df_sample) < 20:
+                    df_sample = self.df.sample(n=min(200, len(self.df)), random_state=42)
+                
                 fig = px.scatter_3d(
-                    df_sample, x='longitude', y='latitude', z='depth', color='temperature',
+                    df_sample, 
+                    x='longitude', 
+                    y='latitude', 
+                    z='depth', 
+                    color='temperature',
                     title='3D Ocean Data Visualization',
-                    labels={'depth': 'Depth (m)', 'temperature': 'Temp (°C)'}
+                    labels={'depth': 'Depth (m)', 'temperature': 'Temp (°C)', 'longitude': 'Longitude', 'latitude': 'Latitude'},
+                    color_continuous_scale=px.colors.sequential.Viridis,
+                    size='salinity',
+                    size_max=8,
+                    opacity=0.7
                 )
-                fig.update_layout(scene=dict(zaxis=dict(autorange='reversed')))
+                fig.update_layout(
+                    scene=dict(
+                        zaxis=dict(autorange='reversed'),
+                        xaxis_title='Longitude',
+                        yaxis_title='Latitude',
+                        zaxis_title='Depth (m)'
+                    ),
+                    height=600
+                )
             
             else:
                 return None

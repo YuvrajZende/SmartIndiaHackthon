@@ -24,20 +24,48 @@ class OceanChatbot:
             response = self.model.generate_content(prompt)
             return self._extract_text(response)
         except Exception as e:
-            return f"Sorry, I encountered an error: {e}"
+            print(f"Chatbot error: {e}")
+            # Provide more helpful error messages
+            if "API_KEY" in str(e) or "authentication" in str(e).lower():
+                return "I'm having trouble connecting to the AI service. Please check if the GEMINI_API_KEY is properly set in the backend environment variables."
+            elif "quota" in str(e).lower() or "limit" in str(e).lower():
+                return "I've reached my API usage limit. Please try again later or check your API quota."
+            else:
+                return f"I encountered an error while processing your request: {str(e)[:100]}... Please try rephrasing your question or check the backend logs for more details."
     
     def _create_context_prompt(self, user_message):
         """Creates a context-aware prompt for the AI."""
-        system_prompt = """You are OceanGPT, an expert oceanographer. You are assisting a user analyzing ARGO float data. 
-        Your capabilities:
-        1. Analyze ocean data from the provided context.
-        2. Explain ocean phenomena.
-        3. Provide insights for fishing and marine research.
-        Use the data context below to answer the user's question accurately."""
+        system_prompt = """You are OceanGPT, an expert oceanographer and AI assistant specializing in ocean data analysis. You are helping users understand ARGO float data and oceanographic phenomena.
 
-        context_info = f"\nCurrent Data Context:\n" + "\n".join([f"- {k}: {v}" for k, v in self.data_summary.items()])
+Your expertise includes:
+1. Ocean temperature and salinity analysis
+2. Marine ecosystem dynamics
+3. Fishing recommendations based on ocean conditions
+4. Climate change impacts on oceans
+5. Oceanographic data interpretation
+
+Guidelines:
+- Provide accurate, scientific information
+- Use clear, accessible language
+- Suggest relevant visualizations when appropriate
+- Be helpful and educational
+- If you don't know something, say so clearly
+
+Current Data Context:"""
+
+        context_info = ""
+        if self.data_summary:
+            context_info = "\n" + "\n".join([f"- {k.replace('_', ' ').title()}: {v}" for k, v in self.data_summary.items()])
+        else:
+            context_info = "\n- No specific ocean data context available for this region yet."
         
-        full_prompt = f"{system_prompt}\n\n{context_info}\n\nUser Question: {user_message}\n\nYour Answer:"
+        # Add model information if available
+        if self.predictor and hasattr(self.predictor, 'model_metrics') and self.predictor.model_metrics:
+            context_info += "\n\nAvailable Predictive Models:"
+            for param, metrics in self.predictor.model_metrics.items():
+                context_info += f"\n- {param.title()} Model: {metrics.get('model_type', 'Unknown')} (R² = {metrics.get('r2', 'N/A')})"
+        
+        full_prompt = f"{system_prompt}{context_info}\n\nUser Question: {user_message}\n\nYour Answer:"
         return full_prompt
     
     def _extract_text(self, response):

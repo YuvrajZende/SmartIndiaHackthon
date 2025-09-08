@@ -12,6 +12,35 @@ export interface ChatResponse {
   region: string
 }
 
+export interface VisualizationResponse {
+  summary: any
+  model_metrics: any
+  visualizations: {
+    geo_map: string
+    depth_profile: string
+    time_series: string
+    scatter_3d: string
+  }
+}
+
+export interface ModelLoadResponse {
+  status: 'loaded' | 'already_loaded'
+  message: string
+  region: string
+  summary?: any
+  model_metrics?: any
+}
+
+export interface ModelStatus {
+  name: string
+  loaded: boolean
+  summary?: any
+}
+
+export interface ModelStatusResponse {
+  model_status: Record<string, ModelStatus>
+}
+
 export interface ApiError {
   detail: string
 }
@@ -57,8 +86,17 @@ class ApiService {
     return this.request<{ regions: Record<string, string> }>('/api/regions')
   }
 
-  async analyzeRegion(regionKey: string): Promise<any> {
-    return this.request('/api/analyze', {
+  async analyzeRegion(regionKey: string): Promise<VisualizationResponse> {
+    return this.request<VisualizationResponse>('/api/analyze', {
+      method: 'POST',
+      body: JSON.stringify({
+        region_key: regionKey
+      })
+    })
+  }
+
+  async getVisualizations(regionKey: string): Promise<VisualizationResponse> {
+    return this.request<VisualizationResponse>('/api/visualizations', {
       method: 'POST',
       body: JSON.stringify({
         region_key: regionKey
@@ -104,6 +142,19 @@ class ApiService {
 
   async healthCheck(): Promise<{ status: string; api_key_set: boolean }> {
     return this.request<{ status: string; api_key_set: boolean }>('/health')
+  }
+
+  async loadModels(regionKey: string): Promise<ModelLoadResponse> {
+    return this.request<ModelLoadResponse>('/api/load_models', {
+      method: 'POST',
+      body: JSON.stringify({
+        region_key: regionKey
+      })
+    })
+  }
+
+  async getModelStatus(): Promise<ModelStatusResponse> {
+    return this.request<ModelStatusResponse>('/api/model_status')
   }
 }
 
