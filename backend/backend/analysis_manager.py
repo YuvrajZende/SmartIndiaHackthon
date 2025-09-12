@@ -10,6 +10,7 @@ from .data_fetcher import EnhancedArgoDataFetcher
 from .predictor import AdvancedOceanPredictor
 from .chatbot import OceanChatbot
 from .assistants import FishingAdvisor, ResearchAssistant
+from .data_cache import DataCache
 
 class AnalysisManager:
     """Manages the complete analysis pipeline for a specific region."""
@@ -26,6 +27,7 @@ class AnalysisManager:
         self.df = pd.DataFrame()
         self.summary = {}
         self.data_fetcher = EnhancedArgoDataFetcher()
+        self.data_cache = DataCache(region_key)
         self.predictor = AdvancedOceanPredictor(
             region_key, CONFIG["model_settings"]["model_preference"]
         )
@@ -38,18 +40,28 @@ class AnalysisManager:
         print(f"🌊 Starting analysis for {self.region_name}...")
         
         # 1. Load existing models if available
-        if self.predictor.load_models():
-            print("Using pre-trained models. Fetching latest data for context...")
+        models_loaded = self.predictor.load_models()
+        if models_loaded:
+            print("✅ Using pre-trained models.")
         
-        # 2. Fetch and process data
-        if not self._fetch_and_process_data():
-            return False
+        # 2. Try to load cached data first
+        cached_df, cached_summary = self.data_cache.load_data()
+        if not cached_df.empty:
+            print("📂 Using cached data.")
+            self.df = cached_df
+            self.summary = cached_summary
+        else:
+            # 3. Fetch and process new data
+            if not self._fetch_and_process_data():
+                return False
+            # Cache the newly processed data
+            self.data_cache.save_data(self.df, self.summary)
 
-        # 3. If models weren't loaded, train them
+        # 4. If models weren't loaded, train them
         if not self.predictor.models_trained:
             self.predictor.train_models(self.df)
 
-        # 4. Initialize assistants and chatbot
+        # 5. Initialize assistants and chatbot
         self._initialize_assistants()
         
         print(f"✅ Analysis pipeline completed for {self.region_name}.")

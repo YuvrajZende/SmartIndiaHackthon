@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* OceanGPT Design System - Dark Ocean Theme
+All colors MUST be HSL for consistency.
+*/
+
 @layer base {
   :root {
     /* Ocean Color Palette */
@@ -60,87 +64,56 @@
 
     --radius: 0.75rem;
   }
-
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  
+
   body {
-    @apply text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--gradient-ocean-vertical);
     min-height: 100vh;
   }
-  
-  /* Landing page specific styles */
-  body.landing-mode {
-    @apply bg-background;
-    background: var(--gradient-ocean-vertical);
-  }
-  
-  /* Main app specific styles */
-  body.app-mode {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    @apply bg-background;
-    background: hsl(var(--background));
-  }
 
-  /* Custom scrollbar for landing page */
-  body.landing-mode ::-webkit-scrollbar {
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
     width: 8px;
   }
   
-  body.landing-mode ::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: hsl(var(--ocean-dark));
   }
   
-  body.landing-mode ::-webkit-scrollbar-thumb {
+  ::-webkit-scrollbar-thumb {
     background: hsl(var(--aqua-bright) / 0.3);
     border-radius: 4px;
   }
   
-  body.landing-mode ::-webkit-scrollbar-thumb:hover {
+  ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--aqua-bright) / 0.5);
   }
 }
 
 @layer components {
-  /* Landing page glow effects */
-  body.landing-mode .glow-aqua {
+  /* Glow effects */
+  .glow-aqua {
     box-shadow: var(--shadow-aqua-glow);
   }
   
-  body.landing-mode .text-glow {
+  .text-glow {
     text-shadow: 0 0 20px hsl(var(--aqua-bright) / 0.5);
   }
   
-  /* Ocean wave animation - landing page only */
-  body.landing-mode .ocean-wave {
+  /* Ocean wave animation */
+  .ocean-wave {
     position: relative;
     overflow: hidden;
   }
   
-  body.landing-mode .ocean-wave::before {
+  .ocean-wave::before {
     content: '';
     position: absolute;
     top: 0;
@@ -161,8 +134,8 @@
     100% { transform: translateX(100%); }
   }
   
-  /* Floating animation - landing page only */
-  body.landing-mode .float {
+  /* Floating animation */
+  .float {
     animation: float 6s ease-in-out infinite;
   }
   

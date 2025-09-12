@@ -138,13 +138,18 @@ async def get_model_status():
             status[region_key] = {
                 "name": region_config["name"],
                 "loaded": manager.predictor.models_trained,
-                "summary": manager.get_summary() if manager.predictor.models_trained else None
+                "summary": manager.get_summary() if manager.predictor.models_trained else None,
+                "cache_info": manager.data_cache.get_cache_info()
             }
         else:
+            # Get cache info even if manager isn't loaded
+            from backend.data_cache import DataCache
+            cache = DataCache(region_key)
             status[region_key] = {
                 "name": region_config["name"],
                 "loaded": False,
-                "summary": None
+                "summary": None,
+                "cache_info": cache.get_cache_info()
             }
     return {"model_status": status}
 
@@ -276,6 +281,32 @@ async def get_fishing_advice(request: FishingAdviceRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- Health Check ---
+@app.post("/api/clear_cache")
+async def clear_cache(request: AnalysisRequest):
+    """Clear cached data for a specific region."""
+    try:
+        if request.region_key not in CONFIG["regions"]:
+            raise HTTPException(status_code=400, detail="Invalid region key")
+        
+        # Clear cache
+        from backend.data_cache import DataCache
+        cache = DataCache(request.region_key)
+        cache.clear_cache()
+        
+        # Clear analysis session if exists
+        if request.region_key in analysis_sessions:
+            del analysis_sessions[request.region_key]
+        
+        return {
+            "status": "success",
+            "message": f"Cache cleared for {CONFIG['regions'][request.region_key]['name']}",
+            "region_key": request.region_key
+        }
+        
+    except Exception as e:
+        print(f"Cache clear error: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""

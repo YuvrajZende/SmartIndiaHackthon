@@ -16,6 +16,9 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -50,6 +53,37 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Ocean theme colors
+        ocean: {
+          deep: "hsl(var(--ocean-deep))",
+          dark: "hsl(var(--ocean-dark))",
+          mid: "hsl(var(--ocean-mid))",
+          light: "hsl(var(--ocean-light))",
+        },
+        aqua: {
+          bright: "hsl(var(--aqua-bright))",
+          glow: "hsl(var(--aqua-glow))",
+          light: "hsl(var(--aqua-light))",
+        },
+        teal: {
+          accent: "hsl(var(--teal-accent))",
+        },
+      },
+      backgroundImage: {
+        'gradient-ocean': 'var(--gradient-ocean)',
+        'gradient-ocean-vertical': 'var(--gradient-ocean-vertical)',
+        'gradient-aqua': 'var(--gradient-aqua)',
+        'gradient-glow': 'var(--gradient-glow)',
+      },
+      boxShadow: {
+        'ocean': 'var(--shadow-ocean)',
+        'aqua-glow': 'var(--shadow-aqua-glow)',
+        'glow-aqua': 'var(--shadow-aqua-glow)',
+        'subtle': 'var(--shadow-subtle)',
+      },
+      transitionTimingFunction: {
+        'smooth': 'var(--transition-smooth)',
+        'glow': 'var(--transition-glow)',
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,0 +1,9 @@
+{
+  "region": "Bay of Bengal",
+  "num_profiles": 69,
+  "num_floats": 69,
+  "date_range": "2022-06-01 to 2024-08-27",
+  "avg_surface_temp_C": "27.50",
+  "avg_surface_salinity_PSU": "34.50",
+  "deepest_point_m": "2000"
+}

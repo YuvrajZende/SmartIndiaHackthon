@@ -23,7 +23,7 @@ import {
   CheckCircle
 } from "lucide-react"
 import { apiService, VisualizationResponse } from "@/services/api"
-import { SimpleVisualizationPanel } from "./SimpleVisualizationPanel"
+import { EnhancedVisualizationPanel } from "./EnhancedVisualizationPanel"
 
 interface Message {
   id: string
@@ -352,7 +352,7 @@ export function ChatInterface() {
       {showVisualizations && (
         <div className="w-1/2 border-l border-border overflow-y-auto">
           <div className="p-6">
-            <SimpleVisualizationPanel 
+            <EnhancedVisualizationPanel 
               regionKey={selectedRegion} 
               onDataLoaded={setVisualizationData}
             />

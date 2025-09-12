@@ -10,13 +10,14 @@ import {
   RefreshCw
 } from "lucide-react"
 import { apiService, VisualizationResponse } from "@/services/api"
+import Plot from 'react-plotly.js'
 
 interface VisualizationPanelProps {
   regionKey: string
   onDataLoaded?: (data: VisualizationResponse) => void
 }
 
-export function SimpleVisualizationPanel({ regionKey, onDataLoaded }: VisualizationPanelProps) {
+export function EnhancedVisualizationPanel({ regionKey, onDataLoaded }: VisualizationPanelProps) {
   const [data, setData] = useState<VisualizationResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,46 +54,37 @@ export function SimpleVisualizationPanel({ regionKey, onDataLoaded }: Visualizat
     try {
       const plotData = JSON.parse(vizData)
       
-      // Create a simple HTML page with the Plotly chart
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-          <style>
-            body { margin: 0; padding: 0; }
-            #plot { width: 100%; height: 100vh; }
-          </style>
-        </head>
-        <body>
-          <div id="plot"></div>
-          <script>
-            Plotly.newPlot('plot', ${JSON.stringify(plotData.data)}, ${JSON.stringify(plotData.layout)}, {
+      return (
+        <div className="w-full h-96 border rounded-lg overflow-hidden bg-white">
+          <Plot
+            data={plotData.data}
+            layout={{
+              ...plotData.layout,
+              autosize: true,
+              margin: { l: 50, r: 50, t: 50, b: 50 },
+              paper_bgcolor: 'white',
+              plot_bgcolor: 'white',
+              font: {
+                family: 'Arial, sans-serif',
+                size: 12,
+                color: '#333'
+              }
+            }}
+            config={{
               responsive: true,
               displayModeBar: true,
-              modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
-            });
-          </script>
-        </body>
-        </html>
-      `
-      
-      const blob = new Blob([htmlContent], { type: 'text/html' })
-      const url = URL.createObjectURL(blob)
-      
-      return (
-        <div className="w-full h-96 border rounded-lg overflow-hidden">
-          <iframe
-            src={url}
-            className="w-full h-full"
-            title={`${type} visualization`}
-            onLoad={() => URL.revokeObjectURL(url)}
+              modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+              displaylogo: false
+            }}
+            style={{ width: '100%', height: '100%' }}
+            useResizeHandler={true}
           />
         </div>
       )
     } catch (err) {
+      console.error('Visualization render error:', err)
       return (
-        <div className="flex items-center justify-center h-96 text-muted-foreground">
+        <div className="flex items-center justify-center h-96 text-muted-foreground border rounded-lg">
           <div className="text-center">
             <AlertCircle className="h-8 w-8 mx-auto mb-2" />
             <p>Failed to render visualization</p>
@@ -284,5 +276,3 @@ export function SimpleVisualizationPanel({ regionKey, onDataLoaded }: Visualizat
     </div>
   )
 }
-
-
