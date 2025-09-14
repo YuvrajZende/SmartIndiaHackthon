@@ -12,7 +12,6 @@ import {
   UserCircle,
   ChevronRight,
   Play,
-  ChevronDown,
   Info
 } from "lucide-react"
 
@@ -50,7 +49,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const updateNestedSetting = (parent: string, key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
-      [parent]: { ...prev[parent as keyof typeof prev], [key]: value }
+      [parent]: { ...(prev[parent as keyof typeof prev] as any), [key]: value }
     }))
   }
 

@@ -91,46 +91,11 @@ export function ModelLoader({ onModelLoaded }: ModelLoaderProps) {
     return 'outline'
   }
 
-  const getButtonContent = (regionKey: string, regionName: string) => {
-    if (loadingStates[regionKey]) {
-      return (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading Models...
-        </>
-      )
-    }
-    
-    if (errorStates[regionKey]) {
-      return (
-        <>
-          <AlertCircle className="h-4 w-4" />
-          Error Loading
-        </>
-      )
-    }
-    
-    if (modelStatus[regionKey]?.loaded) {
-      return (
-        <>
-          <CheckCircle className="h-4 w-4" />
-          Models Ready
-        </>
-      )
-    }
-    
-    return (
-      <>
-        <Waves className="h-4 w-4" />
-        Load {regionName}
-      </>
-    )
-  }
+  // Removed unused getButtonContent function
 
   return (
     <div className="flex items-center gap-2">
       {regions.map((region) => {
-        const IconComponent = region.icon
         const regionStatus = modelStatus[region.key]
         const isLoading = loadingStates[region.key]
         const hasError = errorStates[region.key]

@@ -1,20 +1,20 @@
 import { Header } from "@/components/Header"
 import { ChatInterface } from "@/components/ChatInterface"
 import { ModelLoader } from "@/components/ModelLoader"
-import LandingPage from "./landing/LandingPage"
+import Index from "./pages/Index"
 import { useState, useEffect } from "react"
 import "@/globals.css"
 
 function App() {
   const [showLanding, setShowLanding] = useState(true)
-  const [loadedModels, setLoadedModels] = useState<Record<string, any>>({})
 
-  const handleModelLoaded = (regionKey: string, summary: any) => {
-    setLoadedModels(prev => ({
-      ...prev,
-      [regionKey]: summary
-    }))
-  }
+  // const [loadedModels, setLoadedModels] = useState<Record<string, any>>({})
+  // const handleModelLoaded = (regionKey: string, summary: any) => {
+  //   setLoadedModels(prev => ({
+  //     ...prev,
+  //     [regionKey]: summary
+  //   }))
+  // }
 
   const handleGetStarted = () => {
     setShowLanding(false)
@@ -35,14 +35,14 @@ function App() {
   }, [showLanding])
 
   if (showLanding) {
-    return <LandingPage onGetStarted={handleGetStarted} />
+    return <Index onGetStarted={handleGetStarted} />
   }
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-2">
         <Header />
-        <ModelLoader onModelLoaded={handleModelLoaded} />
+        <ModelLoader />
       </div>
       <main className="flex-1 overflow-hidden">
         <ChatInterface />

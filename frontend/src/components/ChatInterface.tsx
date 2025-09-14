@@ -7,22 +7,17 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
 import { 
-  Paperclip, 
-  Plus, 
   Send, 
   Mic, 
   MicOff,
-  Image,
-  FileText,
   Bot,
   Lightbulb,
   AlertCircle,
-  BarChart3,
   Eye,
   EyeOff,
   CheckCircle
 } from "lucide-react"
-import { apiService, VisualizationResponse } from "@/services/api"
+import { apiService } from "@/services/api"
 import { EnhancedVisualizationPanel } from "./EnhancedVisualizationPanel"
 
 interface Message {
@@ -49,7 +44,6 @@ export function ChatInterface() {
   const [selectedRegion, setSelectedRegion] = useState('arabian_sea')
   const [isConnected, setIsConnected] = useState(false)
   const [showVisualizations, setShowVisualizations] = useState(false)
-  const [visualizationData, setVisualizationData] = useState<VisualizationResponse | null>(null)
   const [apiKeyStatus, setApiKeyStatus] = useState<boolean>(false)
   const [loadedModels, setLoadedModels] = useState<Record<string, boolean>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -353,8 +347,7 @@ export function ChatInterface() {
         <div className="w-1/2 border-l border-border overflow-y-auto">
           <div className="p-6">
             <EnhancedVisualizationPanel 
-              regionKey={selectedRegion} 
-              onDataLoaded={setVisualizationData}
+              regionKey={selectedRegion}
             />
           </div>
         </div>
