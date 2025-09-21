@@ -4,21 +4,6 @@ A comprehensive ocean data analysis platform that combines ARGO float data with 
 
 ## 🚀 Quick Start
 
-### Automated Setup (Recommended)
-
-Run the automated setup script to configure everything:
-
-```bash
-python setup_dev_environment.py
-```
-
-This will:
-- Create a proper virtual environment
-- Install all backend dependencies
-- Install all frontend dependencies  
-- Create convenient startup scripts
-- Set up data directories and configuration
-
 ### Manual Setup
 
 If you prefer manual setup:
@@ -27,11 +12,6 @@ If you prefer manual setup:
 ```bash
 # Create virtual environment
 python -m venv backend_venv
-
-# Activate virtual environment (Windows)
-backend_venv\Scripts\activate
-# Or on Linux/Mac:
-source backend_venv/bin/activate
 
 # Install dependencies
 cd backend
@@ -44,14 +24,6 @@ cd frontend
 npm install
 ```
 
-## 🔧 Configuration
-
-### API Keys
-1. Get a free Google Gemini API key from: https://makersuite.google.com/app/apikey
-2. Edit `backend/config_keys.py` and add your API key:
-```python
-GEMINI_API_KEY = "your-actual-api-key-here"
-```
 
 ## 🏃‍♂️ Running the Application
 
@@ -164,12 +136,6 @@ ARGO API → Data Fetcher → Cache System → ML Models → Visualizations
 - **Fishing Advisor**: Location-specific recommendations
 - **Research Assistant**: Data insights and analysis
 
-### 🛡️ Production-Ready Features
-- **Error Handling**: Comprehensive error management
-- **Health Checks**: API status monitoring
-- **Cache Management**: Manual cache clearing
-- **Model Metrics**: Performance tracking and validation
-- **CORS Support**: Secure cross-origin requests
 
 ## 🌊 Ocean Data Regions
 
@@ -178,60 +144,11 @@ Supported regions with real ARGO float data:
 - **Bay of Bengal**: Monsoon impact studies
 - **North Indian Ocean**: Climate change monitoring
 
-## 🧪 API Documentation
-
-### Core Endpoints
-- `GET /` - API information and available regions
-- `POST /api/analyze` - Complete analysis with model training
-- `POST /api/visualizations` - Get cached visualizations
-- `POST /api/chat` - AI chatbot interaction
-- `POST /api/predict` - Ocean parameter predictions
-- `GET /api/model_status` - Model loading status
-- `POST /api/clear_cache` - Cache management
-
-### Example Usage
-```python
-import requests
-
-# Get visualizations (uses cache if available)
-response = requests.post('http://localhost:8000/api/visualizations', 
-                        json={'region_key': 'arabian_sea'})
-data = response.json()
-
-# Chat with AI assistant
-response = requests.post('http://localhost:8000/api/chat',
-                        json={
-                            'message': 'What are the ocean conditions like?',
-                            'region_key': 'arabian_sea'
-                        })
-```
 
 ## 🔍 Troubleshooting
 
-### Common Issues
 
-#### 1. Visualizations not showing
-```bash
-# Check if Plotly dependencies are installed
-cd frontend
-npm list react-plotly.js plotly.js-dist-min
-
-# Reinstall if missing
-npm install plotly.js-dist-min@^2.27.0 react-plotly.js@^2.6.0
-```
-
-#### 2. Models not persisting
-```bash
-# Check if models directory exists
-ls models/
-
-# Clear cache and retrain
-curl -X POST http://localhost:8000/api/clear_cache \
-     -H "Content-Type: application/json" \
-     -d '{"region_key": "arabian_sea"}'
-```
-
-#### 3. Chatbot not responding
+#### 1. Chatbot not responding
 ```bash
 # Check API key configuration
 python -c "
@@ -244,7 +161,7 @@ except ImportError:
 "
 ```
 
-#### 4. Cache issues
+#### 2. Cache issues
 ```bash
 # Check cache status
 curl http://localhost:8000/api/model_status
@@ -253,19 +170,5 @@ curl http://localhost:8000/api/model_status
 rm -rf data_cache/
 rm -rf models/
 ```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Run `python setup_dev_environment.py` 
-3. Make your changes
-4. Test both backend and frontend
-5. Submit a pull request
-
-## 📜 License
-
-This project was developed for the Smart India Hackathon, demonstrating innovative use of AI and oceanographic data for practical applications in marine science and fisheries management.
-
----
 
 **Built with ❤️ for ocean science and marine conservation** 🐠🌊
